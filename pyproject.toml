@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "lazyfields"
+version = "0.1.0"
+description = "Lazy evaluation of dataclass fields"
+authors = ["Fabian Zills <fzills@icp.uni-stuttgart.de>"]
+license = "Apache-2.0"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.8.0"
+pytest = "^8.3.2"
+
+
+
+[tool.poetry.group.zntrack.dependencies]
+znflow = "^0.1.14"
+znjson = "^0.2.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
