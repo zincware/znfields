@@ -1,5 +1,5 @@
 import dataclasses
-import lazyfields
+import znfields
 import pytest
 
 
@@ -8,8 +8,8 @@ def example1_parameter_getter(self, name):
 
 
 @dataclasses.dataclass
-class Example1(lazyfields.Base):
-    parameter: float = lazyfields.field(getter=example1_parameter_getter)
+class Example1(znfields.Base):
+    parameter: float = znfields.field(getter=example1_parameter_getter)
 
 
 def test_example1():
@@ -18,8 +18,8 @@ def test_example1():
 
 
 @dataclasses.dataclass
-class Example2(lazyfields.Base):
-    parameter: float = lazyfields.field()
+class Example2(znfields.Base):
+    parameter: float = znfields.field()
 
 
 def test_example2():
@@ -29,12 +29,12 @@ def test_example2():
 
 def test_wrong_metadata():
     with pytest.raises(TypeError):
-        lazyfields.field(getter=example1_parameter_getter, metadata="Hello")
+        znfields.field(getter=example1_parameter_getter, metadata="Hello")
 
 
 @dataclasses.dataclass
-class Example3(lazyfields.Base):
-    parameter: float = lazyfields.field(
+class Example3(znfields.Base):
+    parameter: float = znfields.field(
         getter=example1_parameter_getter, metadata={"category": "test"}
     )
 
@@ -46,13 +46,13 @@ def test_example3():
     field = dataclasses.fields(example)[0]
     assert field.metadata == {
         "category": "test",
-        lazyfields._GETTER: example1_parameter_getter,
+        znfields._GETTER: example1_parameter_getter,
     }
 
 
 def test_dataclass_field_without_getter():
     @dataclasses.dataclass
-    class DataClassWithoutGetter(lazyfields.Base):
+    class DataClassWithoutGetter(znfields.Base):
         field_without_getter: int = 42
 
     obj = DataClassWithoutGetter()
@@ -64,8 +64,8 @@ def test_dataclass_field_with_getter():
         return f"lazy_{name}"
 
     @dataclasses.dataclass
-    class DataClassWithGetter(lazyfields.Base):
-        field_with_getter: int = lazyfields.field(getter=getter, default=0)
+    class DataClassWithGetter(znfields.Base):
+        field_with_getter: int = znfields.field(getter=getter, default=0)
 
     obj = DataClassWithGetter()
     assert obj.field_with_getter == "lazy_field_with_getter"
@@ -73,7 +73,7 @@ def test_dataclass_field_with_getter():
 
 def test_non_existent_attribute():
     @dataclasses.dataclass
-    class DataClass(lazyfields.Base):
+    class DataClass(znfields.Base):
         existing_field: int = 42
 
     obj = DataClass()
@@ -82,7 +82,7 @@ def test_non_existent_attribute():
 
 
 def test_not_a_dataclass():
-    class NotADataclass(lazyfields.Base):
+    class NotADataclass(znfields.Base):
         regular_field: str = "regular"
 
     instance = NotADataclass()
@@ -95,9 +95,9 @@ def test_lazy_loading():
         return f"lazy value for {name}"
 
     @dataclasses.dataclass
-    class MyDataClass(lazyfields.Base):
+    class MyDataClass(znfields.Base):
         regular_field: str
-        lazy_field: str = lazyfields.field(default=None, getter=lazy_getter)
+        lazy_field: str = znfields.field(default=None, getter=lazy_getter)
 
     instance = MyDataClass(regular_field="regular")
     assert instance.regular_field == "regular"
@@ -106,7 +106,7 @@ def test_lazy_loading():
 
 def test_no_lazy_loading():
     @dataclasses.dataclass
-    class MyDataClass(lazyfields.Base):
+    class MyDataClass(znfields.Base):
         regular_field: str
         lazy_field: str = "default"
 
@@ -117,4 +117,4 @@ def test_no_lazy_loading():
 
 def test_metadata_must_be_dict():
     with pytest.raises(TypeError):
-        lazyfields.field(metadata="not a dict", getter=lambda instance, name: None)
+        znfields.field(metadata="not a dict", getter=lambda instance, name: None)

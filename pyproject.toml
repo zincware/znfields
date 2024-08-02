@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "lazyfields"
+name = "znfields"
 version = "0.1.0"
 description = "Lazy evaluation of dataclass fields"
 authors = ["Fabian Zills <fzills@icp.uni-stuttgart.de>"]

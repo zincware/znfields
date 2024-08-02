@@ -2,7 +2,7 @@ import dataclasses
 import functools
 from typing import Any, Callable, Optional
 
-_GETTER = "lazyfields.getter"
+_GETTER = "znfields.getter"
 
 
 class Base:
