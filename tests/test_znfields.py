@@ -54,7 +54,7 @@ def test_example3():
     field = dataclasses.fields(example)[0]
     assert field.metadata == {
         "category": "test",
-        znfields._GETTER: example1_parameter_getter,
+        znfields.ZNFIELDS_GETTER_TYPE: example1_parameter_getter,
     }
 
 
