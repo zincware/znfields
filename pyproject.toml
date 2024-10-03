@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "znfields"
-version = "0.1.0"
+version = "0.1.1"
 description = "Lazy evaluation of dataclass fields"
 authors = ["Fabian Zills <fzills@icp.uni-stuttgart.de>"]
 license = "Apache-2.0"
