@@ -22,7 +22,6 @@ def test_example1_with_update():
     assert example.parameter == "parameter:1"
     example.parameter = 2
     assert example.parameter == "parameter:2"
-    
 
 
 @dataclasses.dataclass

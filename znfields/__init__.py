@@ -6,6 +6,7 @@ from typing import Any, Callable, Optional
 class _ZNFIELDS_GETTER_TYPE:
     pass
 
+
 ZNFIELDS_GETTER_TYPE = _ZNFIELDS_GETTER_TYPE()
 
 
