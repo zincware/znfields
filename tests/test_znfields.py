@@ -17,6 +17,13 @@ def test_example1():
     assert example.parameter == "parameter:1"
 
 
+def test_example1_with_update():
+    example = Example1(parameter=1)
+    assert example.parameter == "parameter:1"
+    example.parameter = 2
+    assert example.parameter == "parameter:2"
+
+
 @dataclasses.dataclass
 class Example2(znfields.Base):
     parameter: float = znfields.field()
@@ -46,7 +53,7 @@ def test_example3():
     field = dataclasses.fields(example)[0]
     assert field.metadata == {
         "category": "test",
-        znfields._GETTER: example1_parameter_getter,
+        znfields.ZNFIELDS_GETTER_TYPE: example1_parameter_getter,
     }
 
 

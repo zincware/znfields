@@ -2,7 +2,12 @@ import dataclasses
 import functools
 from typing import Any, Callable, Optional
 
-_GETTER = "znfields.getter"
+
+class _ZNFIELDS_GETTER_TYPE:
+    pass
+
+
+ZNFIELDS_GETTER_TYPE = _ZNFIELDS_GETTER_TYPE()
 
 
 class Base:
@@ -17,7 +22,7 @@ class Base:
             )
         except StopIteration:
             return super().__getattribute__(name)
-        lazy = field.metadata.get(_GETTER)
+        lazy = field.metadata.get(ZNFIELDS_GETTER_TYPE)
         if lazy:
             return lazy(self, name)
         return super().__getattribute__(name)
@@ -31,7 +36,7 @@ def field(*, getter: Optional[Callable[[Any, str], Any]] = None, **kwargs):
                 raise TypeError(
                     f"metadata must be a dict, not {type(kwargs['metadata'])}"
                 )
-            kwargs["metadata"][_GETTER] = getter
+            kwargs["metadata"][ZNFIELDS_GETTER_TYPE] = getter
         else:
-            kwargs["metadata"] = {_GETTER: getter}
+            kwargs["metadata"] = {ZNFIELDS_GETTER_TYPE: getter}
     return dataclasses.field(**kwargs)
