@@ -12,6 +12,8 @@ pip install znfields
 
 ## Example
 
+The `znfields.field` supports all arguments from `dataclasses.field` with the additional `getter` argument.
+
 ```python
 import dataclasses
 import znfields
