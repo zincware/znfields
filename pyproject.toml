@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "znfields"
-version = "0.1.1"
+version = "0.1.2"
 description = "Lazy evaluation of dataclass fields"
 authors = ["Fabian Zills <fzills@icp.uni-stuttgart.de>"]
 license = "Apache-2.0"
@@ -14,11 +14,6 @@ pre-commit = "^3.8.0"
 pytest = "^8.3.2"
 coverage = "^7.6.1"
 
-
-
-[tool.poetry.group.zntrack.dependencies]
-znflow = "^0.1.14"
-znjson = "^0.2.3"
 
 [build-system]
 requires = ["poetry-core"]
