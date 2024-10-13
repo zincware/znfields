@@ -29,7 +29,9 @@ class Base:
 
 
 @functools.wraps(dataclasses.field)
-def field(*, getter: Optional[Callable[[Any, str], Any]] = None, **kwargs):
+def field(
+    *, getter: Optional[Callable[[Any, str], Any]] = None, **kwargs
+) -> dataclasses.Field:
     if getter is not None:
         if "metadata" in kwargs:
             if not isinstance(kwargs["metadata"], dict):
