@@ -12,16 +12,17 @@ pip install znfields
 
 ## Example
 
-The `znfields.field` supports all arguments from `dataclasses.field` with the additional `getter` argument.
+The `znfields.field` supports all arguments from `dataclasses.field` with the
+additional `getter` argument.
 
 ```python
 import dataclasses
 import znfields
 
-def example1_parameter_getter(self, name):
+def parameter_getter(self, name):
     return f"{name}:{self.__dict__[name]}"
 
 @dataclasses.dataclass
-class Example3(znfields.Base):
-    parameter: float = znfields.field(getter=example1_parameter_getter)
+class ClassWithParameter(znfields.Base):
+    parameter: float = znfields.field(getter=parameter_getter)
 ```
