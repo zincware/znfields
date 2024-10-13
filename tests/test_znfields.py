@@ -1,10 +1,19 @@
 import dataclasses
-import znfields
+
 import pytest
+
+import znfields
 
 
 def example1_parameter_getter(self, name):
     return f"{name}:{self.__dict__[name]}"
+
+
+def stringify_list(self, name):
+    content = self.__dict__[name]
+    self.__dict__[name] = [str(x) for x in content]
+    # Can not return a copy to append to, but must be the same object
+    return self.__dict__[name]
 
 
 @dataclasses.dataclass
@@ -12,9 +21,22 @@ class Example1(znfields.Base):
     parameter: float = znfields.field(getter=example1_parameter_getter)
 
 
+@dataclasses.dataclass
+class Example1WithDefault(znfields.Base):
+    parameter: float = znfields.field(getter=example1_parameter_getter, default=1)
+
+
+@dataclasses.dataclass
+class Example1WithDefaultFactory(znfields.Base):
+    parameter: list = znfields.field(getter=stringify_list, default_factory=list)
+
+
 def test_example1():
     example = Example1(parameter=1)
     assert example.parameter == "parameter:1"
+
+    exampe_w_default = Example1WithDefault()
+    assert exampe_w_default.parameter == "parameter:1"
 
 
 def test_example1_with_update():
@@ -125,3 +147,10 @@ def test_no_lazy_loading():
 def test_metadata_must_be_dict():
     with pytest.raises(TypeError):
         znfields.field(metadata="not a dict", getter=lambda instance, name: None)
+
+
+def test_default_factory():
+    example = Example1WithDefaultFactory()
+    assert example.parameter == []
+    example.parameter.append(1)
+    assert example.parameter == ["1"]
