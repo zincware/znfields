@@ -5,8 +5,14 @@ import pytest
 import znfields
 
 
-def example1_parameter_getter(self, name):
+def getter_01(self, name):
     return f"{name}:{self.__dict__[name]}"
+
+
+def setter_01(self, name, value):
+    if not isinstance(value, float):
+        raise ValueError(f"Value {value} is not a float")
+    self.__dict__[name] = value
 
 
 def stringify_list(self, name):
@@ -17,18 +23,32 @@ def stringify_list(self, name):
 
 
 @dataclasses.dataclass
+class SetterGetterNoInit(znfields.Base):
+    parameter: float = znfields.field(getter=getter_01, setter=setter_01, init=False)
+
+
+@dataclasses.dataclass
+class SetterOnly(znfields.Base):
+    parameter: float = znfields.field(setter=setter_01)
+
+
+@dataclasses.dataclass
 class Example1(znfields.Base):
-    parameter: float = znfields.field(getter=example1_parameter_getter)
+    parameter: float = znfields.field(getter=getter_01)
 
 
 @dataclasses.dataclass
 class Example1WithDefault(znfields.Base):
-    parameter: float = znfields.field(getter=example1_parameter_getter, default=1)
+    parameter: float = znfields.field(getter=getter_01, default=1)
 
 
 @dataclasses.dataclass
 class Example1WithDefaultFactory(znfields.Base):
     parameter: list = znfields.field(getter=stringify_list, default_factory=list)
+
+
+class NoDataClass(znfields.Base):
+    parameter: float = znfields.field(getter=getter_01, setter=setter_01)
 
 
 def test_example1():
@@ -58,14 +78,15 @@ def test_example2():
 
 def test_wrong_metadata():
     with pytest.raises(TypeError):
-        znfields.field(getter=example1_parameter_getter, metadata="Hello")
+        znfields.field(getter=getter_01, metadata="Hello")
+
+    with pytest.raises(TypeError):
+        znfields.field(setter=setter_01, metadata="Hello")
 
 
 @dataclasses.dataclass
 class Example3(znfields.Base):
-    parameter: float = znfields.field(
-        getter=example1_parameter_getter, metadata={"category": "test"}
-    )
+    parameter: float = znfields.field(getter=getter_01, metadata={"category": "test"})
 
 
 def test_example3():
@@ -75,7 +96,7 @@ def test_example3():
     field = dataclasses.fields(example)[0]
     assert field.metadata == {
         "category": "test",
-        znfields.ZNFIELDS_GETTER_TYPE: example1_parameter_getter,
+        znfields.ZNFIELDS_GETTER_TYPE: getter_01,
     }
 
 
@@ -154,3 +175,104 @@ def test_default_factory():
     assert example.parameter == []
     example.parameter.append(1)
     assert example.parameter == ["1"]
+
+
+def test_getter_setter_no_init():
+    example = SetterGetterNoInit()
+    with pytest.raises(ValueError):
+        example.parameter = "text"
+
+    example.parameter = 3.14
+    assert example.parameter == "parameter:3.14"
+
+    # test non-field attributes
+    example.some_attribute = 42
+    assert example.some_attribute == 42
+
+
+@dataclasses.dataclass
+class ParentClass(znfields.Base):
+    parent_field: str = znfields.field(getter=getter_01)
+
+
+@dataclasses.dataclass
+class ChildClass(ParentClass):
+    child_field: str = znfields.field(getter=getter_01)
+
+
+def test_inherited_getter():
+    instance = ChildClass(parent_field="parent", child_field="child")
+    assert instance.parent_field == "parent_field:parent"
+    assert instance.child_field == "child_field:child"
+
+
+def test_setter_validation():
+    example = SetterGetterNoInit()
+
+    with pytest.raises(ValueError):
+        example.parameter = "invalid value"
+
+    with pytest.raises(KeyError):
+        # dict is not set, getter raises KeyError instead of AttributeError
+        assert example.parameter is None
+
+    example.parameter = 2.71
+    assert example.parameter == "parameter:2.71"
+
+
+@dataclasses.dataclass
+class NoDefaultField(znfields.Base):
+    parameter: float = znfields.field(getter=getter_01, setter=setter_01)
+
+
+def test_no_default_field():
+    with pytest.raises(TypeError):
+        NoDefaultField()  # should raise because no default is provided
+    obj = NoDefaultField(parameter=1.23)
+    assert obj.parameter == "parameter:1.23"
+
+
+@dataclasses.dataclass
+class CombinedGetterSetter(znfields.Base):
+    parameter: float = znfields.field(getter=getter_01, setter=setter_01)
+
+
+def test_combined_getter_setter():
+    obj = CombinedGetterSetter(parameter=2.5)
+    assert obj.parameter == "parameter:2.5"
+    obj.parameter = 3.5
+    assert obj.parameter == "parameter:3.5"
+
+    with pytest.raises(ValueError):
+        obj.parameter = "invalid value"
+
+
+@dataclasses.dataclass
+class Nested(znfields.Base):
+    inner_field: float = znfields.field(getter=getter_01)
+
+
+@dataclasses.dataclass
+class Outer(znfields.Base):
+    outer_field: Nested = dataclasses.field(default_factory=lambda: Nested(1.0))
+
+
+def test_nested_dataclass():
+    obj = Outer()
+    assert obj.outer_field.inner_field == "inner_field:1.0"
+
+
+def test_no_dataclass():
+    x = NoDataClass()
+    with pytest.raises(TypeError, match="is not a dataclass"):
+        x.parameter = 5
+
+    with pytest.raises(TypeError, match="is not a dataclass"):
+        assert x.parameter is None
+
+
+def test_setter_only():
+    x = SetterOnly(parameter=5.5)
+    with pytest.raises(ValueError):
+        x.parameter = "5"
+    assert x.parameter == 5.5
