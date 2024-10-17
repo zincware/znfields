@@ -26,6 +26,10 @@ def stringify_list(self, name):
 class SetterGetterNoInit(znfields.Base):
     parameter: float = znfields.field(getter=getter_01, setter=setter_01, init=False)
 
+@dataclasses.dataclass
+class SetterOnly(znfields.Base):
+    parameter: float = znfields.field(setter=setter_01)
+
 
 @dataclasses.dataclass
 class Example1(znfields.Base):
@@ -74,6 +78,9 @@ def test_example2():
 def test_wrong_metadata():
     with pytest.raises(TypeError):
         znfields.field(getter=getter_01, metadata="Hello")
+
+    with pytest.raises(TypeError):
+        znfields.field(setter=setter_01, metadata="Hello")
 
 
 @dataclasses.dataclass
@@ -177,6 +184,10 @@ def test_getter_setter_no_init():
     example.parameter = 3.14
     assert example.parameter == "parameter:3.14"
 
+    # test non-field attributes
+    example.some_attribute = 42
+    assert example.some_attribute == 42
+
 
 @dataclasses.dataclass
 class ParentClass(znfields.Base):
@@ -256,3 +267,10 @@ def test_no_dataclass():
     
     with pytest.raises(TypeError, match="is not a dataclass"):
         assert x.parameter is None
+
+
+def test_setter_only():
+    x = SetterOnly(parameter=5.5)
+    with pytest.raises(ValueError):
+        x.parameter = "5"
+    assert x.parameter == 5.5
