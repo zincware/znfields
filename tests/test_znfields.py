@@ -1,6 +1,8 @@
 import dataclasses
-import znfields
+
 import pytest
+
+import znfields
 
 
 def example1_parameter_getter(self, name):
