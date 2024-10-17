@@ -4,7 +4,8 @@
 
 # znfields
 
-Provide a `getter` and `setter` for `dataclasses.fields` to allow e.g. for lazy evaluation or field content validation.
+Provide a `getter` and `setter` for `dataclasses.fields` to allow e.g. for lazy
+evaluation or field content validation.
 
 ```bash
 pip install znfields

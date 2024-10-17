@@ -178,25 +178,28 @@ def test_getter_setter_no_init():
 class ParentClass(znfields.Base):
     parent_field: str = znfields.field(getter=getter_01)
 
+
 @dataclasses.dataclass
 class ChildClass(ParentClass):
     child_field: str = znfields.field(getter=getter_01)
+
 
 def test_inherited_getter():
     instance = ChildClass(parent_field="parent", child_field="child")
     assert instance.parent_field == "parent_field:parent"
     assert instance.child_field == "child_field:child"
 
+
 def test_setter_validation():
     example = SetterGetterNoInit()
-    
+
     with pytest.raises(ValueError):
         example.parameter = "invalid value"
-    
+
     with pytest.raises(KeyError):
         # dict is not set, getter raises KeyError instead of AttributeError
-        assert example.parameter is None 
-    
+        assert example.parameter is None
+
     example.parameter = 2.71
     assert example.parameter == "parameter:2.71"
 
@@ -204,6 +207,7 @@ def test_setter_validation():
 @dataclasses.dataclass
 class NoDefaultField(znfields.Base):
     parameter: float = znfields.field(getter=getter_01, setter=setter_01)
+
 
 def test_no_default_field():
     with pytest.raises(TypeError):
@@ -216,12 +220,13 @@ def test_no_default_field():
 class CombinedGetterSetter(znfields.Base):
     parameter: float = znfields.field(getter=getter_01, setter=setter_01)
 
+
 def test_combined_getter_setter():
     obj = CombinedGetterSetter(parameter=2.5)
     assert obj.parameter == "parameter:2.5"
     obj.parameter = 3.5
     assert obj.parameter == "parameter:3.5"
-    
+
     with pytest.raises(ValueError):
         obj.parameter = "invalid value"
 
@@ -230,11 +235,12 @@ def test_combined_getter_setter():
 class Nested(znfields.Base):
     inner_field: float = znfields.field(getter=getter_01)
 
+
 @dataclasses.dataclass
 class Outer(znfields.Base):
     outer_field: Nested = dataclasses.field(default_factory=lambda: Nested(1.0))
 
+
 def test_nested_dataclass():
     obj = Outer()
     assert obj.outer_field.inner_field == "inner_field:1.0"
-
