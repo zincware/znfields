@@ -26,6 +26,7 @@ def stringify_list(self, name):
 class SetterGetterNoInit(znfields.Base):
     parameter: float = znfields.field(getter=getter_01, setter=setter_01, init=False)
 
+
 @dataclasses.dataclass
 class SetterOnly(znfields.Base):
     parameter: float = znfields.field(setter=setter_01)
@@ -260,11 +261,12 @@ def test_nested_dataclass():
     obj = Outer()
     assert obj.outer_field.inner_field == "inner_field:1.0"
 
+
 def test_no_dataclass():
     x = NoDataClass()
     with pytest.raises(TypeError, match="is not a dataclass"):
         x.parameter = 5
-    
+
     with pytest.raises(TypeError, match="is not a dataclass"):
         assert x.parameter is None
 
