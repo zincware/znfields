@@ -20,15 +20,15 @@ additional `getter` argument.
 import dataclasses
 import znfields
 
-def getter(self, name):
+def getter(self, name) -> str:
     return f"{name}:{self.__dict__[name]}"
 
-def setter(self, name, value):
+def setter(self, name, value) -> None:
     if not isinstance(value, float):
         raise ValueError(f"Value {value} is not a float")
     self.__dict__[name] = value
 
 @dataclasses.dataclass
 class MyModel(znfields.Base):
-    parameter: float = znfields.field(getter=getter)
+    parameter: float = znfields.field(getter=getter, setter=setter)
 ```
