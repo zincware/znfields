@@ -5,8 +5,14 @@ import pytest
 import znfields
 
 
-def example1_parameter_getter(self, name):
+def getter_01(self, name):
     return f"{name}:{self.__dict__[name]}"
+
+
+def setter_01(self, name, value):
+    if not isinstance(value, float):
+        raise ValueError(f"Value {value} is not a float")
+    self.__dict__[name] = value
 
 
 def stringify_list(self, name):
@@ -17,13 +23,18 @@ def stringify_list(self, name):
 
 
 @dataclasses.dataclass
+class SetterGetterNoInit(znfields.Base):
+    parameter: float = znfields.field(getter=getter_01, setter=setter_01, init=False)
+
+
+@dataclasses.dataclass
 class Example1(znfields.Base):
-    parameter: float = znfields.field(getter=example1_parameter_getter)
+    parameter: float = znfields.field(getter=getter_01)
 
 
 @dataclasses.dataclass
 class Example1WithDefault(znfields.Base):
-    parameter: float = znfields.field(getter=example1_parameter_getter, default=1)
+    parameter: float = znfields.field(getter=getter_01, default=1)
 
 
 @dataclasses.dataclass
@@ -58,14 +69,12 @@ def test_example2():
 
 def test_wrong_metadata():
     with pytest.raises(TypeError):
-        znfields.field(getter=example1_parameter_getter, metadata="Hello")
+        znfields.field(getter=getter_01, metadata="Hello")
 
 
 @dataclasses.dataclass
 class Example3(znfields.Base):
-    parameter: float = znfields.field(
-        getter=example1_parameter_getter, metadata={"category": "test"}
-    )
+    parameter: float = znfields.field(getter=getter_01, metadata={"category": "test"})
 
 
 def test_example3():
@@ -75,7 +84,7 @@ def test_example3():
     field = dataclasses.fields(example)[0]
     assert field.metadata == {
         "category": "test",
-        znfields.ZNFIELDS_GETTER_TYPE: example1_parameter_getter,
+        znfields.ZNFIELDS_GETTER_TYPE: getter_01,
     }
 
 
@@ -154,3 +163,12 @@ def test_default_factory():
     assert example.parameter == []
     example.parameter.append(1)
     assert example.parameter == ["1"]
+
+
+def test_getter_setter_no_init():
+    example = SetterGetterNoInit()
+    with pytest.raises(ValueError):
+        example.parameter = "text"
+
+    example.parameter = 3.14
+    assert example.parameter == "parameter:3.14"
