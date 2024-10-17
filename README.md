@@ -4,7 +4,7 @@
 
 # znfields
 
-Provide a `getter` for `dataclasses.fields` to allow e.g. for lazy evaluation.
+Provide a `getter` and `setter` for `dataclasses.fields` to allow e.g. for lazy evaluation or field content validation.
 
 ```bash
 pip install znfields
@@ -19,10 +19,15 @@ additional `getter` argument.
 import dataclasses
 import znfields
 
-def parameter_getter(self, name):
+def getter(self, name):
     return f"{name}:{self.__dict__[name]}"
 
+def setter(self, name, value):
+    if not isinstance(value, float):
+        raise ValueError(f"Value {value} is not a float")
+    self.__dict__[name] = value
+
 @dataclasses.dataclass
-class ClassWithParameter(znfields.Base):
-    parameter: float = znfields.field(getter=parameter_getter)
+class MyModel(znfields.Base):
+    parameter: float = znfields.field(getter=getter)
 ```
