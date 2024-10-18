@@ -44,7 +44,8 @@ class Base:
         TypeError: If the class is not a dataclass.
         """
         if name.startswith("__") and name.endswith("__"):
-            return super().__getattribute__(name)
+            return object.__getattribute__(self, name)
+            # return super().__getattribute__(name)
         if not dataclasses.is_dataclass(self):
             raise TypeError(f"{self} is not a dataclass")
         try:
@@ -56,7 +57,8 @@ class Base:
         lazy = field.metadata.get(ZNFIELDS_GETTER_TYPE)
         if lazy:
             return lazy(self, name)
-        return super().__getattribute__(name)
+        return object.__getattribute__(self, name)
+        # return super().__getattribute__(name)
 
     def __setattr__(self, name: str, value: Any) -> None:
         """Overrides the default behavior of attribute assignment.
@@ -130,3 +132,21 @@ def field(
         else:
             kwargs["metadata"] = {ZNFIELDS_SETTER_TYPE: setter}
     return dataclasses.field(**kwargs)
+
+
+def dataclass(cls=None, /, **kwargs) -> Any:
+    """Wrap the input in a dataclass and set the __setattr__ and __getattribute__."""
+
+    def wrap(cls):
+        cls.__getattribute__ = Base.__getattribute__
+        cls.__setattr__ = Base.__setattr__
+        cls = dataclasses.dataclass(cls, **kwargs)
+        return cls
+
+    # See if we're being called as @dataclass or @dataclass().
+    if cls is None:
+        # We're called with parens.
+        return wrap
+
+    # We're called as @dataclass without parens.
+    return wrap(cls)
