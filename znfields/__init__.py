@@ -1,6 +1,8 @@
 import dataclasses
 import functools
 from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Type, TypeVar, Union, overload, Protocol, Generic
+import dataclasses
 
 
 class _ZNFIELDS_GETTER_TYPE:
@@ -81,52 +83,60 @@ class Base:
         else:
             super().__setattr__(name, value)
 
+T = TypeVar("T")
+Self = TypeVar("Self", bound="Base")
 
-@functools.wraps(dataclasses.field)
+class GetterSetter(Protocol[T]):
+    """Protocol to enforce correct typing for descriptors."""
+
+    @overload
+    def __get__(self, instance: None, owner: type) -> "GetterSetter[T]": ...
+    
+    @overload
+    def __get__(self, instance: Self, owner: Type[Self]) -> T: ...
+    
+    def __get__(self, instance: Optional[Self], owner: Type[Self]) -> Union[T, "GetterSetter[T]"]: ...
+    
+    def __set__(self, instance: Self, value: T) -> None: ...
+
+
+class ZnField(Generic[T], GetterSetter[T]):
+    """A type-safe descriptor for ZnTrack fields."""
+
+    def __init__(
+        self,
+        *,
+        getter: Optional[Callable[[Any, str], T]] = None,
+        setter: Optional[Callable[[Any, str, T], None]] = None,
+        **kwargs,
+    ):
+        self.getter = getter
+        self.setter = setter
+        self.field = dataclasses.field(**kwargs)
+
+    def __set_name__(self, owner: type, name: str):
+        """Store the attribute name."""
+        self.name = name
+
+    def __get__(self, instance: Optional[Self], owner: Type[Self]) -> Union[T, "ZnField[T]"]:
+        if instance is None:
+            return self  # Access via class
+        value = instance.__dict__[self.name]
+        return self.getter(instance, self.name) if self.getter else value
+
+    def __set__(self, instance: Self, value: T) -> None:
+        if self.setter:
+            self.setter(instance, self.name, value)
+        else:
+            instance.__dict__[self.name] = value
+
+
+# ✅ Correct type preservation
 def field(
     *,
-    getter: Optional[Callable[[Any, str], Any]] = None,
-    setter: Optional[Callable[[Any, str, Any], None]] = None,
+    getter: Optional[Callable[[Any, str], T]] = None,
+    setter: Optional[Callable[[Any, str, T], None]] = None,
     **kwargs,
-) -> dataclasses.Field:
-    """Wrapper around `dataclasses.field` to allow for defining custom
-    getter and setter functions via metadata.
-
-    Attributes
-    ----------
-    getter : Optional[Callable[[Any, str], Any]]
-        A function that takes the instance and attribute name as arguments
-        and returns the value of the attribute.
-    setter : Optional[Callable[[Any, str, Any], None]]
-        A function that takes the instance, attribute name, and value as
-        arguments and sets the value of the attribute.
-
-    Returns
-    -------
-    dataclasses.Field
-        A field object with custom getter and setter functionality defined
-        via metadata.
-
-    Raises
-    ------
-    TypeError: If the metadata is not a dictionary.
-    """
-    if getter is not None:
-        if "metadata" in kwargs:
-            if not isinstance(kwargs["metadata"], dict):
-                raise TypeError(
-                    f"metadata must be a dict, not {type(kwargs['metadata'])}"
-                )
-            kwargs["metadata"][ZNFIELDS_GETTER_TYPE] = getter
-        else:
-            kwargs["metadata"] = {ZNFIELDS_GETTER_TYPE: getter}
-    if setter is not None:
-        if "metadata" in kwargs:
-            if not isinstance(kwargs["metadata"], dict):
-                raise TypeError(
-                    f"metadata must be a dict, not {type(kwargs['metadata'])}"
-                )
-            kwargs["metadata"][ZNFIELDS_SETTER_TYPE] = setter
-        else:
-            kwargs["metadata"] = {ZNFIELDS_SETTER_TYPE: setter}
-    return dataclasses.field(**kwargs)
+) -> ZnField[T]:
+    """Return a descriptor that preserves type information."""
+    return ZnField(getter=getter, setter=setter, **kwargs)
