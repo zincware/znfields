@@ -1,18 +1,15 @@
 import dataclasses
 import functools
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any, Optional
 
 
 class _ZNFIELDS_GETTER_TYPE:
     """Sentinel class to identify the getter type."""
 
-    pass
-
 
 class _ZNFIELDS_SETTER_TYPE:
     """Sentinel class used to identify the setter type."""
-
-    pass
 
 
 # Sentinels to identify the getter and setter types
@@ -85,8 +82,8 @@ class Base:
 @functools.wraps(dataclasses.field)
 def field(
     *,
-    getter: Optional[Callable[[Any, str], Any]] = None,
-    setter: Optional[Callable[[Any, str, Any], None]] = None,
+    getter: Callable[[Any, str], Any] | None = None,
+    setter: Callable[[Any, str, Any], None] | None = None,
     **kwargs,
 ) -> dataclasses.Field:
     """Wrapper around `dataclasses.field` to allow for defining custom
